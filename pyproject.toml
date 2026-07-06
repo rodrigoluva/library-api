@@ -1,0 +1,17 @@
+[project]
+name = "library-api"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Rodrigo Valladão",email = "rodrigoluva@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.13,<4.0"
+dependencies = [
+    "fastapi[standard] (>=0.139.0,<0.140.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
