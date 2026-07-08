@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 from sqlalchemy import ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from library_api.models import Base
@@ -26,6 +26,11 @@ class Author(Base):
         server_default=func.now(),
     )
 
+    books: Mapped[List['Book']] = relationship(
+        'Book',
+        back_populates='authors'
+    )
+
 
 class Book(Base):
     __tablename__ = 'books'
@@ -47,7 +52,12 @@ class Book(Base):
 
     author: Mapped['Author'] = relationship(
         'Author',
-        back_populates='authors'
+        back_populates='books'
+    )
+
+    book_copies: Mapped[List['BookCopy']] = relationship(
+        'BookCopy',
+        back_populates='books'
     )
 
 
