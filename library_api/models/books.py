@@ -1,10 +1,12 @@
 from datetime import date, datetime
 from enum import Enum
-from typing import List, Optional
+from typing import TYPE_CHECKING, List, Optional
 from sqlalchemy import ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from library_api.models import Base
 
+if TYPE_CHECKING:
+    from library_api.models import User
 
 class BookStatus(str, Enum):
     AVAILABLE = 'available'
@@ -28,7 +30,7 @@ class Author(Base):
 
     books: Mapped[List['Book']] = relationship(
         'Book',
-        back_populates='authors'
+        back_populates='authors',
     )
 
 
@@ -54,10 +56,9 @@ class Book(Base):
         'Author',
         back_populates='books'
     )
-
     book_copies: Mapped[List['BookCopy']] = relationship(
         'BookCopy',
-        back_populates='books'
+        back_populates='books',
     )
 
 
@@ -79,5 +80,40 @@ class BookCopy(Base):
 
     book: Mapped['Book'] = relationship(
         'Book',
-        back_populates='book_copies'
+        back_populates='book_copies',
+    )
+    borrow_records: Mapped[List['BorrowRecord']] = relationship(
+        'BorrowRecord',
+        back_populates='book_copies',
+    )
+
+
+class BorrowRecord(Base):
+    __tablename__ = 'borrow_records'
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(
+        ForeignKey('users.id'),
+    )
+    book_copy_id: Mapped[int] = mapped_column(
+        ForeignKey('book_copies.id'),
+    )
+    borrowed_at: Mapped[datetime]
+    due_at: Mapped[datetime]
+    returned_at: Mapped[Optional[datetime]]
+    created_at: Mapped[datetime] = mapped_column(
+        server_default=func.now(),
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        onupdate=func.now(),
+        server_default=func.now(),
+    )
+
+    user: Mapped['User'] = relationship(
+        'User',
+        back_populates='borrow_records',
+    )
+    book_copy: Mapped['BookCopy'] = relationship(
+        'BookCopy',
+        back_populates='borrow_records',
     )
