@@ -1,21 +1,53 @@
+from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, field_validator
 
 
 class UserSchema(BaseModel):
-    username: str
+    name: str
     email: EmailStr
     password: str
 
-class UserPublicSchema(BaseModel):
-    id: int
-    username: str
-    email: EmailStr
+    @field_validator('name', mode='before')
+    @classmethod
+    def captalize_name(cls, v):
+        return v.title()
+    
+    @field_validator('password')
+    @classmethod
+    def password_min_length(cls, v):
+        if len(v) < 4:
+            raise ValueError('Password must be at least 6 characters')
+        return v
+
 
 class UserUpdateSchema(BaseModel):
-    username: Optional[str] = None
+    name: Optional[str] = None
     email: Optional[str] = None
     password: Optional[str] = None
 
+    @field_validator('name', mode='before')
+    @classmethod
+    def captalize_name(cls, v):
+        return v.title()
+    
+    @field_validator('password')
+    @classmethod
+    def password_min_length(cls, v):
+        if len(v) < 4:
+            raise ValueError('Password must be at least 6 characters')
+        return v
+
+
+class UserPublicSchema(BaseModel):
+    id: int
+    name: str
+    email: EmailStr
+    created_at: datetime
+    updated_at: datetime
+
+
 class UserListPublicSchema(BaseModel):
     users: List[UserPublicSchema]
+    offset: int
+    limit: int

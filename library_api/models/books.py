@@ -30,7 +30,7 @@ class Author(Base):
 
     books: Mapped[List['Book']] = relationship(
         'Book',
-        back_populates='authors',
+        back_populates='author',
     )
 
 
@@ -58,7 +58,7 @@ class Book(Base):
     )
     book_copies: Mapped[List['BookCopy']] = relationship(
         'BookCopy',
-        back_populates='books',
+        back_populates='book',
     )
 
 
@@ -113,7 +113,7 @@ class BorrowRecord(Base):
         'User',
         back_populates='borrow_records',
     )
-    book_copy: Mapped['BookCopy'] = relationship(
+    book_copies: Mapped['BookCopy'] = relationship(
         'BookCopy',
         back_populates='borrow_records',
     )
