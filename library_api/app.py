@@ -1,13 +1,19 @@
 from fastapi import FastAPI, status
-from library_api.routers import users
+from library_api.routers import authors, users
 
 
 app = FastAPI()
 
 app.include_router(
+   router=authors.router,
+   prefix='/api/v1/authors',
+   tags=['authors'],
+)
+
+app.include_router(
     router=users.router,
     prefix='/api/v1/users',
-    tags=['users']
+    tags=['users'],
 )
 
 @app.get('/health_check', status_code=status.HTTP_200_OK)
