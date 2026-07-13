@@ -77,8 +77,8 @@ async def create_user(
         },
 )
 async def list_users(
-        offset: int = Query(0, ge=0, description='number of records to skip'),
-        limit: int = Query(100, ge=1, le=100, description='limit of records'),
+        offset: int = Query(0, ge=0, description='Number of records to skip'),
+        limit: int = Query(100, ge=1, le=100, description='Limit of records'),
         search: Optional[str] = Query(None, description='Search by name or email'),
         db: AsyncSession = Depends(get_session),
 ):
@@ -99,7 +99,7 @@ async def list_users(
     if not users:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='name or email not found'
+            detail='name or email not found',
         )
 
     return {
@@ -143,7 +143,7 @@ async def get_user(
 
 @router.put(
         path='/{user_id}',
-        status_code=status.HTTP_201_CREATED,
+        status_code=status.HTTP_200_OK,
         response_model=UserPublicSchema,
         summary='Update User',
         responses={
