@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from typing import Optional, List
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class AuthorSchema(BaseModel):
@@ -32,6 +32,13 @@ class AuthorPublicSchema(BaseModel):
     birthdate: Optional[date] = None
     created_at: datetime
     updated_at: datetime
+
+
+class AuthorRelationshipPublicSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    name: str
 
 
 class AuthorListPublicSchema(BaseModel):

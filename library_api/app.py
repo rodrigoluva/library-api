@@ -1,5 +1,10 @@
 from fastapi import FastAPI, status
-from library_api.routers import authors, users
+
+from library_api.routers import (
+    authors,
+    books,
+    users,
+)
 
 
 app = FastAPI()
@@ -8,6 +13,12 @@ app.include_router(
    router=authors.router,
    prefix='/api/v1/authors',
    tags=['authors'],
+)
+
+app.include_router(
+    router=books.router,
+    prefix='/api/v1/books',
+    tags=['books'],
 )
 
 app.include_router(
