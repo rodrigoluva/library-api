@@ -84,7 +84,7 @@ class BookCopy(Base):
     )
     borrow_records: Mapped[List['BorrowRecord']] = relationship(
         'BorrowRecord',
-        back_populates='book_copies',
+        back_populates='book_copy',
     )
 
 
@@ -113,7 +113,7 @@ class BorrowRecord(Base):
         'User',
         back_populates='borrow_records',
     )
-    book_copies: Mapped['BookCopy'] = relationship(
+    book_copy: Mapped['BookCopy'] = relationship(
         'BookCopy',
         back_populates='borrow_records',
     )
