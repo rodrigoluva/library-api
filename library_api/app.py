@@ -3,6 +3,7 @@ from fastapi import FastAPI, status
 from library_api.routers import (
     authors,
     books,
+    book_copies,
     users,
 )
 
@@ -19,6 +20,12 @@ app.include_router(
     router=books.router,
     prefix='/api/v1/books',
     tags=['books'],
+)
+
+app.include_router(
+    router=book_copies.router,
+    prefix='/api/v1',
+    tags=['book-copies']
 )
 
 app.include_router(
