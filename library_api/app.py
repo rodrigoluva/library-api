@@ -1,6 +1,7 @@
 from fastapi import FastAPI, status
 
 from library_api.routers import (
+    auth,
     authors,
     books,
     book_copies,
@@ -9,6 +10,18 @@ from library_api.routers import (
 
 
 app = FastAPI()
+
+app.include_router(
+    router=auth.router,
+    prefix='/api/v1',
+    tags=['authentication'],
+)
+
+app.include_router(
+    router=users.router,
+    prefix='/api/v1/users',
+    tags=['users'],
+)
 
 app.include_router(
    router=authors.router,
@@ -26,12 +39,6 @@ app.include_router(
     router=book_copies.router,
     prefix='/api/v1',
     tags=['book-copies']
-)
-
-app.include_router(
-    router=users.router,
-    prefix='/api/v1/users',
-    tags=['users'],
 )
 
 @app.get('/health_check', status_code=status.HTTP_200_OK)

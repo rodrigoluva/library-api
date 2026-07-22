@@ -17,7 +17,7 @@ class UserSchema(BaseModel):
     @classmethod
     def password_min_length(cls, v):
         if len(v) < 4:
-            raise ValueError('Password must be at least 6 characters')
+            raise ValueError('Password must be at least 4 characters')
         return v
 
 
@@ -35,7 +35,7 @@ class UserUpdateSchema(BaseModel):
     @classmethod
     def password_min_length(cls, v):
         if len(v) < 4:
-            raise ValueError('Password must be at least 6 characters')
+            raise ValueError('Password must be at least 4 characters')
         return v
 
 
