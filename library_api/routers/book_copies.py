@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from library_api.core.database import get_session
+from library_api.dependencies.permissions import User, UserRole, require_roles
 from library_api.models.books import Book, BookCopy, BookStatus
 from library_api.schemas.book_copies import (
     BookCopyCreateSchema,
@@ -23,8 +24,26 @@ router = APIRouter()
         path='/books/{book_id}/copies',
         status_code=status.HTTP_200_OK,
         response_model=BookCopyCreateListPublicSchema,
-        summary='Create copies of a Book',
+        summary='Create copies of a Book - [ADMIN, LIBRARIAN]',
         responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
+            status.HTTP_403_FORBIDDEN: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'not enough permissions'
+                        }
+                    }
+                }
+            },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
                     'application/json': {
@@ -39,6 +58,12 @@ router = APIRouter()
 async def create_book_copy(
         book_id: int,
         data: BookCopyCreateSchema,
+        _: User = Depends(
+            require_roles(
+                UserRole.ADMIN,
+                UserRole.LIBRARIAN,
+            )
+        ),
         db: AsyncSession = Depends(get_session),
 ):
     book_result = await db.execute(
@@ -87,8 +112,17 @@ async def create_book_copy(
         path='/book-copies',
         status_code=status.HTTP_200_OK,
         response_model=BookCopyListPublicSchema,
-        summary='List Book Copies',
+        summary='List Book Copies - [ADMIN, LIBRARIAN]',
         responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
                     'application/json': {
@@ -105,6 +139,13 @@ async def list_book_copies(
         limit: int = Query(100, ge=1, le=100, description='Limit of records'),
         search: Optional[str] = Query(None, description='Search by Book name'),
         book_id: Optional[int] = Query(None, description='Filter by Book ID'),
+        _: User = Depends(
+            require_roles(
+                UserRole.ADMIN,
+                UserRole.LIBRARIAN,
+                UserRole.MEMBER,
+            )
+        ),
         db: AsyncSession = Depends(get_session),
 ):
     query = (
@@ -145,8 +186,17 @@ async def list_book_copies(
         path='/book-copies/{book_copy_id}',
         status_code=status.HTTP_200_OK,
         response_model=BookCopyPublicSchema,
-        summary='Search Book Copy by ID',
+        summary='Search Book Copy by ID - [ADMIN, LIBRARIAN]',
         responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
                     'application/json': {
@@ -160,6 +210,13 @@ async def list_book_copies(
 )
 async def get_book_copy(
         book_copy_id: int,
+        _: User = Depends(
+            require_roles(
+                UserRole.ADMIN,
+                UserRole.LIBRARIAN,
+                UserRole.MEMBER,
+            )
+        ),
         db: AsyncSession = Depends(get_session)
 ):
     result = await db.execute(
@@ -185,8 +242,26 @@ async def get_book_copy(
         path='/book-copies/{book_copy_id}',
         status_code=status.HTTP_200_OK,
         response_model=BookCopyPublicSchema,
-        summary='Update Book Copy',
+        summary='Update Book Copy - [ADMIN, LIBRARIAN]',
         responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
+            status.HTTP_403_FORBIDDEN: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'not enough permissions'
+                        }
+                    }
+                }
+            },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
                     'application/json': {
@@ -234,6 +309,12 @@ async def get_book_copy(
 async def update_book_copy(
         book_copy_id: int,
         book_copy_update: BookCopyUpdateSchema,
+        _: User = Depends(
+            require_roles(
+                UserRole.ADMIN,
+                UserRole.LIBRARIAN,
+            )
+        ),
         db: AsyncSession = Depends(get_session)
 ):
     book_copy = await db.get(BookCopy, book_copy_id)
@@ -277,8 +358,26 @@ async def update_book_copy(
 @router.delete(
         path='/book-copies/{book_copy_id}',
         status_code=status.HTTP_204_NO_CONTENT,
-        summary='Delete Book Copy',
+        summary='Delete Book Copy - [ADMIN]',
         responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
+            status.HTTP_403_FORBIDDEN: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'not enough permissions'
+                        }
+                    }
+                }
+            },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
                     'application/json': {
@@ -292,6 +391,11 @@ async def update_book_copy(
 )
 async def delete_book_copy(
         book_copy_id: int,
+        _: User = Depends(
+            require_roles(
+                UserRole.ADMIN,
+            )
+        ),
         db: AsyncSession = Depends(get_session),
 ):
     book_copy = await db.get(BookCopy, book_copy_id)

@@ -5,6 +5,7 @@ from library_api.routers import (
     authors,
     books,
     book_copies,
+    borrow_records,
     users,
 )
 
@@ -39,6 +40,12 @@ app.include_router(
     router=book_copies.router,
     prefix='/api/v1',
     tags=['book-copies']
+)
+
+app.include_router(
+    router=borrow_records.router,
+    prefix='/api/v1',
+    tags=['borrow-records']
 )
 
 @app.get('/health_check', status_code=status.HTTP_200_OK)
