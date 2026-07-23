@@ -18,7 +18,7 @@ router = APIRouter()
         path='/token',
         status_code=status.HTTP_200_OK,
         response_model=Token,
-        summary='Create Access Token',
+        summary='Create Access Token - [PUBLIC]',
         responses={
             status.HTTP_401_UNAUTHORIZED: {
                 'content': {
@@ -33,7 +33,7 @@ router = APIRouter()
 )
 async def token(
         login_data: LoginRequest,
-        db: AsyncSession = Depends(get_session)
+        db: AsyncSession = Depends(get_session),
 ):
     user = await authenticate_user(
         email=login_data.email,
@@ -61,13 +61,13 @@ async def token(
         path='/refresh_token',
         status_code=status.HTTP_200_OK,
         response_model=Token,
-        summary='Refresh Access Token',
+        summary='Refresh Access Token - [ADMIN, LIBRARIAN, MEMBER]',
         responses={
             status.HTTP_401_UNAUTHORIZED: {
                 'content': {
                     'application/json': {
                         'example': {
-                            'detail': 'Not authenticated',
+                            'detail': 'could not validate credentials',
                         }
                     }
                 }

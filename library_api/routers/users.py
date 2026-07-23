@@ -3,8 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select, exists
 from sqlalchemy.ext.asyncio import AsyncSession
 from library_api.core.database import get_session
+from library_api.dependencies.permissions import require_roles
 from library_api.core.security import get_password_hash
-from library_api.models import User
+from library_api.models.users import User, UserRole
 from library_api.schemas.users import (
     UserListPublicSchema,
     UserPublicSchema,
@@ -20,7 +21,7 @@ router = APIRouter()
         path='/',
         status_code=status.HTTP_201_CREATED,
         response_model=UserPublicSchema,
-        summary='Create User',
+        summary='Create User - [PUBLIC]',
         responses={
             status.HTTP_400_BAD_REQUEST: {
                 'content': {
@@ -50,6 +51,7 @@ async def create_user(
         email=user.email,
         password=get_password_hash(user.password),
         name=user.name,
+        role=UserRole.MEMBER,
     )
 
     db.add(db_user)
@@ -63,8 +65,26 @@ async def create_user(
         path='/',
         status_code=status.HTTP_200_OK,
         response_model=UserListPublicSchema,
-        summary='List Users',
+        summary='List Users - [ADMIN]',
         responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
+            status.HTTP_403_FORBIDDEN: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'not enough permissions'
+                        }
+                    }
+                }
+            },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
                     'application/json': {
@@ -80,6 +100,7 @@ async def list_users(
         offset: int = Query(0, ge=0, description='Number of records to skip'),
         limit: int = Query(100, ge=1, le=100, description='Limit of records'),
         search: Optional[str] = Query(None, description='Search by name or email'),
+        _: User = Depends(require_roles(UserRole.ADMIN)),
         db: AsyncSession = Depends(get_session),
 ):
     query = select(User)
@@ -113,8 +134,26 @@ async def list_users(
         path='/{user_id}',
         status_code=status.HTTP_200_OK,
         response_model=UserPublicSchema,
-        summary='Search User by ID',
+        summary='Search User by ID - [ADMIN]',
         responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
+            status.HTTP_403_FORBIDDEN: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'not enough permissions'
+                        }
+                    }
+                }
+            },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
                     'application/json': {
@@ -128,6 +167,7 @@ async def list_users(
 )
 async def get_user(
         user_id: int,
+        _: User = Depends(require_roles(UserRole.ADMIN)),
         db: AsyncSession = Depends(get_session),
 ):
     user = await db.get(User, user_id)
@@ -145,13 +185,31 @@ async def get_user(
         path='/{user_id}',
         status_code=status.HTTP_200_OK,
         response_model=UserPublicSchema,
-        summary='Update User',
+        summary='Update User - [ADMIN]',
         responses={
             status.HTTP_400_BAD_REQUEST: {
                 'content': {
                     'application/json': {
                         'example': {
                             'detail': 'email not available'
+                        }
+                    }
+                }
+            },
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
+            status.HTTP_403_FORBIDDEN: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'not enough permissions'
                         }
                     }
                 }
@@ -170,7 +228,8 @@ async def get_user(
 async def update_user(
         user_id: int,
         user_update: UserUpdateSchema,
-        db: AsyncSession = Depends(get_session)
+        _: User = Depends(require_roles(UserRole.ADMIN)),
+        db: AsyncSession = Depends(get_session),
 ):
     user = await db.get(User, user_id)
 
@@ -210,8 +269,26 @@ async def update_user(
 @router.delete(
         path='/{user_id}',
         status_code=status.HTTP_204_NO_CONTENT,
-        summary='Delete User',
+        summary='Delete User - [ADMIN]',
         responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
+            status.HTTP_403_FORBIDDEN: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'not enough permissions'
+                        }
+                    }
+                }
+            },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
                     'application/json': {
@@ -225,6 +302,7 @@ async def update_user(
 )
 async def delete_user(
         user_id: int,
+        _: User = Depends(require_roles(UserRole.ADMIN)),
         db: AsyncSession = Depends(get_session),
 ):
     user = await db.get(User, user_id)

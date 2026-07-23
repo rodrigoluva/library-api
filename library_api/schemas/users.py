@@ -2,6 +2,8 @@ from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, EmailStr, field_validator
 
+from library_api.models.users import UserRole
+
 
 class UserSchema(BaseModel):
     name: str
@@ -25,6 +27,7 @@ class UserUpdateSchema(BaseModel):
     name: Optional[str] = None
     email: Optional[str] = None
     password: Optional[str] = None
+    role: Optional[UserRole] = None
 
     @field_validator('name', mode='before')
     @classmethod
@@ -43,6 +46,7 @@ class UserPublicSchema(BaseModel):
     id: int
     name: str
     email: EmailStr
+    role: UserRole
     created_at: datetime
     updated_at: datetime
 

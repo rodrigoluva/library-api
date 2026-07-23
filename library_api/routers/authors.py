@@ -3,7 +3,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from library_api.core.database import get_session
-from library_api.models import Author
+from library_api.models import Author, User
+from library_api.dependencies.permissions import UserRole, require_roles
 from library_api.schemas.authors import (
     AuthorListPublicSchema,
     AuthorPublicSchema,
@@ -14,14 +15,41 @@ from library_api.schemas.authors import (
 
 router = APIRouter()
 
+
 @router.post(
         path='/',
         status_code=status.HTTP_201_CREATED,
         response_model=AuthorPublicSchema,
-        summary='Create Author',
+        summary='Create Author - [ADMIN, LIBRARIAN]',
+        responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
+            status.HTTP_403_FORBIDDEN: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'not enough permissions'
+                        }
+                    }
+                }
+            },
+        }
 )
 async def create_author(
         author: AuthorSchema,
+        _: User = Depends(
+            require_roles(
+                UserRole.ADMIN,
+                UserRole.LIBRARIAN,
+            )
+        ),
         db: AsyncSession = Depends(get_session),
 ):
     db_author = Author(
@@ -41,8 +69,17 @@ async def create_author(
         path='/',
         status_code=status.HTTP_200_OK,
         response_model=AuthorListPublicSchema,
-        summary='List Authors',
+        summary='List Authors - [ADMIN, LIBRARIAN, MEMBER]',
         responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
                     'application/json': {
@@ -58,6 +95,13 @@ async def list_authors(
         offset: int = Query(0, ge=0, description='Number of records to skip'),
         limit: int = Query(100, ge=1, le=100, description='Limit of records'),
         search: Optional[str] = Query(None, description='Search by name'),
+        _: User = Depends(
+            require_roles(
+                UserRole.ADMIN,
+                UserRole.LIBRARIAN,
+                UserRole.MEMBER,
+            )
+        ),
         db: AsyncSession = Depends(get_session),
 ):
     query = select(Author)
@@ -89,8 +133,17 @@ async def list_authors(
         path='/{author_id}',
         status_code=status.HTTP_200_OK,
         response_model=AuthorPublicSchema,
-        summary='Search Author by ID',
+        summary='Search Author by ID - [ADMIN, LIBRARIAN, MEMBER]',
         responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
                     'application/json': {
@@ -104,6 +157,13 @@ async def list_authors(
 )
 async def get_author(
         author_id: int,
+        _: User = Depends(
+            require_roles(
+                UserRole.ADMIN,
+                UserRole.LIBRARIAN,
+                UserRole.MEMBER,
+            )
+        ),
         db: AsyncSession = Depends(get_session),
 ):
     author = await db.get(Author, author_id)
@@ -121,8 +181,26 @@ async def get_author(
         path='/{author_id}',
         status_code=status.HTTP_200_OK,
         response_model=AuthorPublicSchema,
-        summary='Update Author',
+        summary='Update Author - [ADMIN, LIBRARIAN]',
         responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
+            status.HTTP_403_FORBIDDEN: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'not enough permissions'
+                        }
+                    }
+                }
+            },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
                     'application/json': {
@@ -138,6 +216,12 @@ async def get_author(
 async def update_author(
         author_id: int,
         author_update: AuthorUpdateSchema,
+        _: User = Depends(
+            require_roles(
+                UserRole.ADMIN,
+                UserRole.LIBRARIAN,
+            )
+        ),
         db: AsyncSession = Depends(get_session), 
 ):
     author = await db.get(Author, author_id)
@@ -162,8 +246,26 @@ async def update_author(
 @router.delete(
         path='/{author_id}',
         status_code=status.HTTP_204_NO_CONTENT,
-        summary='Delete Author',
+        summary='Delete Author - [ADMIN]',
         responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
+            status.HTTP_403_FORBIDDEN: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'not enough permissions'
+                        }
+                    }
+                }
+            },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
                     'application/json': {
@@ -177,6 +279,11 @@ async def update_author(
 )
 async def delete_author(
         author_id: int,
+        _: User = Depends(
+            require_roles(
+                UserRole.ADMIN,
+            )
+        ),
         db: AsyncSession = Depends(get_session),
 ):
     author = await db.get(Author, author_id)

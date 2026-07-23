@@ -1,14 +1,16 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import exists, select
+from sqlalchemy import and_, exists, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from library_api.core.database import get_session
-from library_api.models import Author, Book
+from library_api.models import Author, Book, BookCopy, User
+from library_api.models.books import BookStatus
+from library_api.dependencies.permissions import UserRole, require_roles
 from library_api.schemas.books import (
-    BookRelationshipPublicSchema,
+    BookRelationshipListPublicSchema,
     BookListPublicSchema,
     BookPublicSchema,
     BookSchema,
@@ -23,13 +25,31 @@ router = APIRouter()
         path='/',
         status_code=status.HTTP_201_CREATED,
         response_model=BookPublicSchema,
-        summary='Create Book',
+        summary='Create Book - [ADMIN, LIBRARIAN]',
         responses={
             status.HTTP_400_BAD_REQUEST: {
                 'content': {
                     'application/json': {
                         'example': {
                             'detail': 'isbn already in use'
+                        }
+                    }
+                }
+            },
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
+            status.HTTP_403_FORBIDDEN: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'not enough permissions'
                         }
                     }
                 }
@@ -47,6 +67,12 @@ router = APIRouter()
 )
 async def create_book(
         book: BookSchema,
+        _: User = Depends(
+            require_roles(
+                UserRole.ADMIN,
+                UserRole.LIBRARIAN,
+            )
+        ),
         db: AsyncSession = Depends(get_session),
 ):
     isbn_exists = await db.scalar(
@@ -83,8 +109,17 @@ async def create_book(
         path='/',
         status_code=status.HTTP_200_OK,
         response_model=BookListPublicSchema,
-        summary='List Books',
+        summary='List Books - [ADMIN, LIBRARIAN, MEMBER]',
         responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
                     'application/json': {
@@ -101,9 +136,30 @@ async def list_books(
         limit: int = Query(100, ge=1, le=100, description='Limit of records'),
         search: Optional[str] = Query(None, description='Search by ISBN or title'),
         author_id: Optional[str] = Query(None, description='Filter by Author ID'),
+        _: User = Depends(
+            require_roles(
+                UserRole.ADMIN,
+                UserRole.LIBRARIAN,
+                UserRole.MEMBER,
+            )
+        ),
         db: AsyncSession = Depends(get_session),
 ):
-    query = select(Book).options(selectinload(Book.author))
+    query = (
+        select(
+            Book,
+            func.count(BookCopy.id).label('available_copies'),
+        )
+        .outerjoin(
+            BookCopy,
+            and_(
+                Book.id == BookCopy.book_id,
+                BookCopy.status == BookStatus.AVAILABLE
+            ),
+        )
+        .options(selectinload(Book.author))
+        .group_by(Book.id)
+    )
 
     if search:
         search_filter = f'%{search}%'
@@ -118,7 +174,13 @@ async def list_books(
     query = query.offset(offset).limit(limit)
 
     result = await db.execute(query)
-    books = result.scalars().all()
+    rows = result.all()
+
+    books = []
+
+    for book, available_copies in rows:
+        book.available_copies = available_copies
+        books.append(book)
 
     if not books:
         raise HTTPException(
@@ -136,9 +198,18 @@ async def list_books(
 @router.get(
         path='/{book_id}',
         status_code=status.HTTP_200_OK,
-        response_model=BookRelationshipPublicSchema,
-        summary='Search Book by ID',
+        response_model=BookRelationshipListPublicSchema,
+        summary='Search Book by ID - [ADMIN, LIBRARIAN, MEMBER]',
         responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
                     'application/json': {
@@ -152,6 +223,13 @@ async def list_books(
 )
 async def get_book(
         book_id: int,
+        _: User = Depends(
+            require_roles(
+                UserRole.ADMIN,
+                UserRole.LIBRARIAN,
+                UserRole.MEMBER,
+            )
+        ),
         db: AsyncSession = Depends(get_session)
 ):
     result = await db.execute(
@@ -174,7 +252,7 @@ async def get_book(
         path='/{book_id}',
         status_code=status.HTTP_200_OK,
         response_model=BookPublicSchema,
-        summary='Update Book',
+        summary='Update Book - [ADMIN, LIBRARIAN]',
         responses={
             status.HTTP_400_BAD_REQUEST: {
                 'content': {
@@ -184,6 +262,24 @@ async def get_book(
                         },
                     },
                 },
+            },
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
+            status.HTTP_403_FORBIDDEN: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'not enough permissions'
+                        }
+                    }
+                }
             },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
@@ -232,6 +328,12 @@ async def get_book(
 async def update_book(
         book_id: int,
         book_update: BookUpdateSchema,
+        _: User = Depends(
+            require_roles(
+                UserRole.ADMIN,
+                UserRole.LIBRARIAN,
+            )
+        ),
         db: AsyncSession = Depends(get_session),
 ):
     book = await db.get(Book, book_id)
@@ -274,8 +376,26 @@ async def update_book(
 @router.delete(
         path='/{book_id}',
         status_code=status.HTTP_204_NO_CONTENT,
-        summary='Delete Book',
+        summary='Delete Book - [ADMIN]',
         responses={
+            status.HTTP_401_UNAUTHORIZED: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'Not authenticated'
+                        }
+                    }
+                }
+            },
+            status.HTTP_403_FORBIDDEN: {
+                'content': {
+                    'application/json': {
+                        'example': {
+                            'detail': 'not enough permissions'
+                        }
+                    }
+                }
+            },
             status.HTTP_404_NOT_FOUND: {
                 'content': {
                     'application/json': {
@@ -289,6 +409,11 @@ async def update_book(
 )
 async def delete_book(
         book_id: int,
+        _: User = Depends(
+            require_roles(
+                UserRole.ADMIN,
+            )
+        ),
         db: AsyncSession = Depends(get_session),
 ):
     book = await db.get(Book, book_id)

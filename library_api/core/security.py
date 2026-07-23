@@ -115,3 +115,5 @@ async def get_current_user(
             detail='could not validate credentials',
             headers={'WWW-Authenticate': 'Bearer'},
         )
+
+    return user
