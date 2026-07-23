@@ -232,18 +232,35 @@ async def get_book(
         ),
         db: AsyncSession = Depends(get_session)
 ):
-    result = await db.execute(
-        select(Book)
+    query = (
+        select(
+            Book,
+            func.count(BookCopy.id).label('available_copies'),
+        )
+        .outerjoin(
+            BookCopy,
+            and_(
+                Book.id == BookCopy.book_id,
+                BookCopy.status == BookStatus.AVAILABLE,
+            ),
+        )
         .options(selectinload(Book.author))
         .where(Book.id == book_id)
+        .group_by(Book.id)
     )
-    book = result.scalar_one_or_none()
+    
+    result = await db.execute(query)
 
-    if not book:
+    row = result.first()
+
+    if row is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='book not found',
         )
+
+    book, available_copies = row
+    book.available_copies = available_copies
 
     return book
 
