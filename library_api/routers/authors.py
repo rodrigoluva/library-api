@@ -1,10 +1,12 @@
 from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from library_api.core.database import get_session
-from library_api.models import Author, User
 from library_api.dependencies.permissions import UserRole, require_roles
+from library_api.models import Author, User
 from library_api.schemas.authors import (
     AuthorListPublicSchema,
     AuthorPublicSchema,
@@ -12,45 +14,40 @@ from library_api.schemas.authors import (
     AuthorUpdateSchema,
 )
 
-
 router = APIRouter()
 
 
 @router.post(
-        path='/',
-        status_code=status.HTTP_201_CREATED,
-        response_model=AuthorPublicSchema,
-        summary='Create Author - [ADMIN, LIBRARIAN]',
-        responses={
-            status.HTTP_401_UNAUTHORIZED: {
-                'content': {
-                    'application/json': {
-                        'example': {
-                            'detail': 'Not authenticated'
-                        }
-                    }
+    path='/',
+    status_code=status.HTTP_201_CREATED,
+    response_model=AuthorPublicSchema,
+    summary='Create Author - [ADMIN, LIBRARIAN]',
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            'content': {
+                'application/json': {
+                    'example': {'detail': 'Not authenticated'}
                 }
-            },
-            status.HTTP_403_FORBIDDEN: {
-                'content': {
-                    'application/json': {
-                        'example': {
-                            'detail': 'not enough permissions'
-                        }
-                    }
+            }
+        },
+        status.HTTP_403_FORBIDDEN: {
+            'content': {
+                'application/json': {
+                    'example': {'detail': 'not enough permissions'}
                 }
-            },
-        }
+            }
+        },
+    },
 )
 async def create_author(
-        author: AuthorSchema,
-        _: User = Depends(
-            require_roles(
-                UserRole.ADMIN,
-                UserRole.LIBRARIAN,
-            )
-        ),
-        db: AsyncSession = Depends(get_session),
+    author: AuthorSchema,
+    _: User = Depends(
+        require_roles(
+            UserRole.ADMIN,
+            UserRole.LIBRARIAN,
+        )
+    ),
+    db: AsyncSession = Depends(get_session),
 ):
     db_author = Author(
         name=author.name,
@@ -66,52 +63,44 @@ async def create_author(
 
 
 @router.get(
-        path='/',
-        status_code=status.HTTP_200_OK,
-        response_model=AuthorListPublicSchema,
-        summary='List Authors - [ADMIN, LIBRARIAN, MEMBER]',
-        responses={
-            status.HTTP_401_UNAUTHORIZED: {
-                'content': {
-                    'application/json': {
-                        'example': {
-                            'detail': 'Not authenticated'
-                        }
-                    }
+    path='/',
+    status_code=status.HTTP_200_OK,
+    response_model=AuthorListPublicSchema,
+    summary='List Authors - [ADMIN, LIBRARIAN, MEMBER]',
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            'content': {
+                'application/json': {
+                    'example': {'detail': 'Not authenticated'}
                 }
-            },
-            status.HTTP_404_NOT_FOUND: {
-                'content': {
-                    'application/json': {
-                        'example': {
-                            'detail': 'user not found'
-                        }
-                    }
-                }
-            },
+            }
         },
+        status.HTTP_404_NOT_FOUND: {
+            'content': {
+                'application/json': {'example': {'detail': 'user not found'}}
+            }
+        },
+    },
 )
 async def list_authors(
-        offset: int = Query(0, ge=0, description='Number of records to skip'),
-        limit: int = Query(100, ge=1, le=100, description='Limit of records'),
-        search: Optional[str] = Query(None, description='Search by name'),
-        _: User = Depends(
-            require_roles(
-                UserRole.ADMIN,
-                UserRole.LIBRARIAN,
-                UserRole.MEMBER,
-            )
-        ),
-        db: AsyncSession = Depends(get_session),
+    offset: int = Query(0, ge=0, description='Number of records to skip'),
+    limit: int = Query(100, ge=1, le=100, description='Limit of records'),
+    search: Optional[str] = Query(None, description='Search by name'),
+    _: User = Depends(
+        require_roles(
+            UserRole.ADMIN,
+            UserRole.LIBRARIAN,
+            UserRole.MEMBER,
+        )
+    ),
+    db: AsyncSession = Depends(get_session),
 ):
     query = select(Author)
 
     if search:
         search_filter = f'%{search}%'
-        query = query.where(
-            Author.name.ilike(search_filter)
-        )
-    
+        query = query.where(Author.name.ilike(search_filter))
+
     query = query.offset(offset).limit(limit)
 
     result = await db.execute(query)
@@ -122,49 +111,44 @@ async def list_authors(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='name not found',
         )
-    
+
     return {
         'authors': authors,
         'offset': offset,
         'limit': limit,
     }
 
+
 @router.get(
-        path='/{author_id}',
-        status_code=status.HTTP_200_OK,
-        response_model=AuthorPublicSchema,
-        summary='Search Author by ID - [ADMIN, LIBRARIAN, MEMBER]',
-        responses={
-            status.HTTP_401_UNAUTHORIZED: {
-                'content': {
-                    'application/json': {
-                        'example': {
-                            'detail': 'Not authenticated'
-                        }
-                    }
+    path='/{author_id}',
+    status_code=status.HTTP_200_OK,
+    response_model=AuthorPublicSchema,
+    summary='Search Author by ID - [ADMIN, LIBRARIAN, MEMBER]',
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            'content': {
+                'application/json': {
+                    'example': {'detail': 'Not authenticated'}
                 }
-            },
-            status.HTTP_404_NOT_FOUND: {
-                'content': {
-                    'application/json': {
-                        'example': {
-                            'detail': 'user not found'
-                        }
-                    }
-                }
-            },
+            }
         },
+        status.HTTP_404_NOT_FOUND: {
+            'content': {
+                'application/json': {'example': {'detail': 'user not found'}}
+            }
+        },
+    },
 )
 async def get_author(
-        author_id: int,
-        _: User = Depends(
-            require_roles(
-                UserRole.ADMIN,
-                UserRole.LIBRARIAN,
-                UserRole.MEMBER,
-            )
-        ),
-        db: AsyncSession = Depends(get_session),
+    author_id: int,
+    _: User = Depends(
+        require_roles(
+            UserRole.ADMIN,
+            UserRole.LIBRARIAN,
+            UserRole.MEMBER,
+        )
+    ),
+    db: AsyncSession = Depends(get_session),
 ):
     author = await db.get(Author, author_id)
 
@@ -173,56 +157,47 @@ async def get_author(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='user not found',
         )
-    
+
     return author
 
 
 @router.put(
-        path='/{author_id}',
-        status_code=status.HTTP_200_OK,
-        response_model=AuthorPublicSchema,
-        summary='Update Author - [ADMIN, LIBRARIAN]',
-        responses={
-            status.HTTP_401_UNAUTHORIZED: {
-                'content': {
-                    'application/json': {
-                        'example': {
-                            'detail': 'Not authenticated'
-                        }
-                    }
+    path='/{author_id}',
+    status_code=status.HTTP_200_OK,
+    response_model=AuthorPublicSchema,
+    summary='Update Author - [ADMIN, LIBRARIAN]',
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            'content': {
+                'application/json': {
+                    'example': {'detail': 'Not authenticated'}
                 }
-            },
-            status.HTTP_403_FORBIDDEN: {
-                'content': {
-                    'application/json': {
-                        'example': {
-                            'detail': 'not enough permissions'
-                        }
-                    }
-                }
-            },
-            status.HTTP_404_NOT_FOUND: {
-                'content': {
-                    'application/json': {
-                        'example': {
-                            'detail': 'user not found'
-                        }
-                    }
-                }
-            },
+            }
         },
-
+        status.HTTP_403_FORBIDDEN: {
+            'content': {
+                'application/json': {
+                    'example': {'detail': 'not enough permissions'}
+                }
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            'content': {
+                'application/json': {'example': {'detail': 'user not found'}}
+            }
+        },
+    },
 )
 async def update_author(
-        author_id: int,
-        author_update: AuthorUpdateSchema,
-        _: User = Depends(
-            require_roles(
-                UserRole.ADMIN,
-                UserRole.LIBRARIAN,
-            )
-        ),
-        db: AsyncSession = Depends(get_session), 
+    author_id: int,
+    author_update: AuthorUpdateSchema,
+    _: User = Depends(
+        require_roles(
+            UserRole.ADMIN,
+            UserRole.LIBRARIAN,
+        )
+    ),
+    db: AsyncSession = Depends(get_session),
 ):
     author = await db.get(Author, author_id)
 
@@ -231,12 +206,12 @@ async def update_author(
             status_code=status.HTTP_404_NOT_FOUND,
             detail='user not found',
         )
-    
+
     update_data = author_update.model_dump(exclude_unset=True)
 
     for field, value in update_data.items():
         setattr(author, field, value)
-    
+
     await db.commit()
     await db.refresh(author)
 
@@ -244,47 +219,39 @@ async def update_author(
 
 
 @router.delete(
-        path='/{author_id}',
-        status_code=status.HTTP_204_NO_CONTENT,
-        summary='Delete Author - [ADMIN]',
-        responses={
-            status.HTTP_401_UNAUTHORIZED: {
-                'content': {
-                    'application/json': {
-                        'example': {
-                            'detail': 'Not authenticated'
-                        }
-                    }
+    path='/{author_id}',
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary='Delete Author - [ADMIN]',
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {
+            'content': {
+                'application/json': {
+                    'example': {'detail': 'Not authenticated'}
                 }
-            },
-            status.HTTP_403_FORBIDDEN: {
-                'content': {
-                    'application/json': {
-                        'example': {
-                            'detail': 'not enough permissions'
-                        }
-                    }
-                }
-            },
-            status.HTTP_404_NOT_FOUND: {
-                'content': {
-                    'application/json': {
-                        'example': {
-                            'detail': 'user not found'
-                        }
-                    }
-                }
-            },
+            }
         },
+        status.HTTP_403_FORBIDDEN: {
+            'content': {
+                'application/json': {
+                    'example': {'detail': 'not enough permissions'}
+                }
+            }
+        },
+        status.HTTP_404_NOT_FOUND: {
+            'content': {
+                'application/json': {'example': {'detail': 'user not found'}}
+            }
+        },
+    },
 )
 async def delete_author(
-        author_id: int,
-        _: User = Depends(
-            require_roles(
-                UserRole.ADMIN,
-            )
-        ),
-        db: AsyncSession = Depends(get_session),
+    author_id: int,
+    _: User = Depends(
+        require_roles(
+            UserRole.ADMIN,
+        )
+    ),
+    db: AsyncSession = Depends(get_session),
 ):
     author = await db.get(Author, author_id)
 
@@ -296,5 +263,3 @@ async def delete_author(
 
     await db.delete(author)
     await db.commit()
-
-    return

@@ -1,9 +1,9 @@
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Optional
 
-from fastapi import HTTPException, Depends, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 import jwt
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pwdlib import PasswordHash
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,10 +12,10 @@ from library_api.core.database import get_session
 from library_api.core.settings import Settings
 from library_api.models import User
 
-
 pwd_context = PasswordHash.recommended()
 security = HTTPBearer()
 settings = Settings()
+
 
 def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
@@ -64,25 +64,25 @@ def verify_token(token: str) -> Dict:
 
 
 async def authenticate_user(
-        email: str,
-        password: str,
-        db: AsyncSession,
+    email: str,
+    password: str,
+    db: AsyncSession,
 ) -> Optional[User]:
     result = await db.execute(select(User).where(User.email == email))
     user = result.scalar_one_or_none()
 
     if not user:
         return None
-    
+
     if not verify_password(password, user.password):
         return None
-    
+
     return user
 
 
 async def get_current_user(
-        credentials: HTTPAuthorizationCredentials = Depends(security),
-        db: AsyncSession = Depends(get_session)
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_session),
 ) -> User:
     payload = verify_token(credentials.credentials)
 
@@ -93,7 +93,7 @@ async def get_current_user(
             detail='could not validate credentials',
             headers={'WWW-Authenticate': 'Bearer'},
         )
-    
+
     try:
         user_id = int(user_id_str)
     except (ValueError, TypeError):
@@ -102,11 +102,8 @@ async def get_current_user(
             detail='could not validate credentials',
             headers={'WWW-Authenticate': 'Bearer'},
         )
-    
-    result = await db.execute(
-        select(User)
-        .where(User.id == user_id)
-    )
+
+    result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
 
     if not user:

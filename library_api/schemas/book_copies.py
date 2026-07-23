@@ -3,7 +3,6 @@ from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
-
 from library_api.models.books import BookStatus
 from library_api.schemas.books import (
     BookRelationshipPublicSchema,
@@ -11,7 +10,9 @@ from library_api.schemas.books import (
 
 
 class BookCopyCreateSchema(BaseModel):
-    quantity: int = Field(default=1, gt=0, le=10, description='Number of book copies')
+    quantity: int = Field(
+        default=1, gt=0, le=10, description='Number of book copies'
+    )
 
 
 class BookCopyUpdateSchema(BaseModel):

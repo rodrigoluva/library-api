@@ -3,12 +3,11 @@ from fastapi import FastAPI, status
 from library_api.routers import (
     auth,
     authors,
-    books,
     book_copies,
+    books,
     borrow_records,
     users,
 )
-
 
 app = FastAPI()
 
@@ -25,9 +24,9 @@ app.include_router(
 )
 
 app.include_router(
-   router=authors.router,
-   prefix='/api/v1/authors',
-   tags=['authors'],
+    router=authors.router,
+    prefix='/api/v1/authors',
+    tags=['authors'],
 )
 
 app.include_router(
@@ -37,17 +36,14 @@ app.include_router(
 )
 
 app.include_router(
-    router=book_copies.router,
-    prefix='/api/v1',
-    tags=['book-copies']
+    router=book_copies.router, prefix='/api/v1', tags=['book-copies']
 )
 
 app.include_router(
-    router=borrow_records.router,
-    prefix='/api/v1',
-    tags=['borrow-records']
+    router=borrow_records.router, prefix='/api/v1', tags=['borrow-records']
 )
+
 
 @app.get('/health_check', status_code=status.HTTP_200_OK)
 def health_check():
-    return {"status": "200 OK"}
+    return {'status': '200 OK'}

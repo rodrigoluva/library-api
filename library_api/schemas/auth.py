@@ -16,5 +16,3 @@ class LoginRequest(BaseModel):
         if len(v) < 4:
             raise ValueError('Password must be at least 4 characters')
         return v
-    
-    

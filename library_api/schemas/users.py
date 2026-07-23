@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Optional
+
 from pydantic import BaseModel, EmailStr, field_validator
 
 from library_api.models.users import UserRole
@@ -14,7 +15,7 @@ class UserSchema(BaseModel):
     @classmethod
     def captalize_name(cls, v):
         return v.title()
-    
+
     @field_validator('password')
     @classmethod
     def password_min_length(cls, v):
@@ -33,7 +34,7 @@ class UserUpdateSchema(BaseModel):
     @classmethod
     def captalize_name(cls, v):
         return v.title()
-    
+
     @field_validator('password')
     @classmethod
     def password_min_length(cls, v):

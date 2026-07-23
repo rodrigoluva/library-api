@@ -1,10 +1,11 @@
 from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, List
+
 from sqlalchemy import String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-from library_api.models import Base
 
+from library_api.models import Base
 
 if TYPE_CHECKING:
     from library_api.models import BorrowRecord

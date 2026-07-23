@@ -1,12 +1,15 @@
 from datetime import date, datetime
 from enum import Enum
 from typing import TYPE_CHECKING, List, Optional
+
 from sqlalchemy import ForeignKey, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from library_api.models import Base
 
 if TYPE_CHECKING:
     from library_api.models import User
+
 
 class BookStatus(str, Enum):
     AVAILABLE = 'available'
@@ -52,10 +55,7 @@ class Book(Base):
         server_default=func.now(),
     )
 
-    author: Mapped['Author'] = relationship(
-        'Author',
-        back_populates='books'
-    )
+    author: Mapped['Author'] = relationship('Author', back_populates='books')
     book_copies: Mapped[List['BookCopy']] = relationship(
         'BookCopy',
         back_populates='book',
@@ -66,9 +66,7 @@ class BookCopy(Base):
     __tablename__ = 'book_copies'
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    book_id: Mapped[int] = mapped_column(
-        ForeignKey('books.id')
-    )
+    book_id: Mapped[int] = mapped_column(ForeignKey('books.id'))
     status: Mapped[BookStatus] = mapped_column(String(15))
     created_at: Mapped[datetime] = mapped_column(
         server_default=func.now(),

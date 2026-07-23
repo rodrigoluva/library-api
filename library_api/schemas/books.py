@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Optional, List
+from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict, field_validator
 
@@ -46,7 +46,7 @@ class BookPublicSchema(BaseModel):
 
 class BookRelationshipPublicSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     title: str
     author: AuthorRelationshipPublicSchema
@@ -58,7 +58,7 @@ class BookRelationshipPublicSchema(BaseModel):
 
 class BookRelationshipListPublicSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
-    
+
     id: int
     title: str
     author: AuthorRelationshipPublicSchema
