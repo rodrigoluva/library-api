@@ -56,7 +56,20 @@ class BookRelationshipPublicSchema(BaseModel):
     updated_at: datetime
 
 
+class BookRelationshipListPublicSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    id: int
+    title: str
+    author: AuthorRelationshipPublicSchema
+    isbn: str
+    available_copies: Optional[int]
+    published_date: Optional[date]
+    created_at: datetime
+    updated_at: datetime
+
+
 class BookListPublicSchema(BaseModel):
-    books: List[BookRelationshipPublicSchema]
+    books: List[BookRelationshipListPublicSchema]
     offset: int
     limit: int
