@@ -73,3 +73,9 @@ ignore = ['PLR2004', 'PLR0917', 'PLR0913']
 [tool.ruff.format]
 preview = true
 quote-style = 'single'
+
+[tool.taskipy.tasks]
+lint = 'ruff check'
+pre_format = 'ruff check --fix'
+format = 'ruff format'
+run = 'fastapi dev library_api/app.py'
