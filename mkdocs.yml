@@ -1,0 +1,57 @@
+site_name: Library API Documentation
+
+theme:
+  name: material
+  language: en
+  palette:
+    - media: "(prefers-color-scheme)"
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: blue
+      accent: blue
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
+  font:
+    text: Roboto
+
+nav:
+  - Overview: index.md
+  - Prerequisites: prerequisites.md
+  - Installation: installation.md
+  - Configuration: configuration.md
+  - Guidelines & Standards: guidelines.md
+  - Project Structure: project-structure.md
+  - API Endpoints: api-endpoints.md
+  - Data Models: data-models-erd.md
+  - System Architecture: system-architecture.md
+  - Deployment: deployment.md
+
+plugins:
+  - search
+  - i18n:
+      docs_structure: folder
+      languages:
+        - locale: en
+          default: true
+          name: English
+          build: true
+        - locale: pt-BR
+          name: Português (Brasil)
+          build: true
+
+markdown_extensions:
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
