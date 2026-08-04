@@ -134,7 +134,7 @@ async def list_authors(
         },
         status.HTTP_404_NOT_FOUND: {
             'content': {
-                'application/json': {'example': {'detail': 'user not found'}}
+                'application/json': {'example': {'detail': 'author not found'}}
             }
         },
     },
@@ -155,7 +155,7 @@ async def get_author(
     if not author:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='user not found',
+            detail='author not found',
         )
 
     return author
@@ -183,7 +183,7 @@ async def get_author(
         },
         status.HTTP_404_NOT_FOUND: {
             'content': {
-                'application/json': {'example': {'detail': 'user not found'}}
+                'application/json': {'example': {'detail': 'author not found'}}
             }
         },
     },
@@ -204,7 +204,7 @@ async def update_author(
     if not author:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail='user not found',
+            detail='author not found',
         )
 
     update_data = author_update.model_dump(exclude_unset=True)
@@ -239,7 +239,7 @@ async def update_author(
         },
         status.HTTP_404_NOT_FOUND: {
             'content': {
-                'application/json': {'example': {'detail': 'user not found'}}
+                'application/json': {'example': {'detail': 'author not found'}}
             }
         },
     },
