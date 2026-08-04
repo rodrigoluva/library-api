@@ -333,28 +333,30 @@ async def update_book(
             detail='book not found',
         )
 
-    isbn_exists = await db.scalar(
-        select(
-            exists().where(
-                Book.isbn == book_update.isbn,
-                Book.id != book_id,
+    update_data = book_update.model_dump(exclude_unset=True)
+
+    if 'isbn' in update_data:
+        isbn_exists = await db.scalar(
+            select(
+                exists().where(
+                    Book.isbn == book_update.isbn,
+                    Book.id != book_id,
+                )
             )
         )
-    )
-    if isbn_exists:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail='isbn already in use',
-        )
+        if isbn_exists:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail='isbn already in use',
+            )
 
-    author = await db.get(Author, book_update.author_id)
-    if not author:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail='author not found',
-        )
-
-    update_data = book_update.model_dump(exclude_unset=True)
+    if 'author_id' in update_data:
+        author = await db.get(Author, book_update.author_id)
+        if not author:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail='author not found',
+            )
 
     for field, value in update_data.items():
         setattr(book, field, value)
