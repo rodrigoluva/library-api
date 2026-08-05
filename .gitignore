@@ -4,9 +4,29 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Unit test / coverage reports
+htmlcov/
+htmlcov_users/
+htmlcov_users_final/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+cover/
+
 # Environments
 .env
 .venv
+
+# mkdocs documentation
+/site
 
 # ruff
 .ruff_cache/

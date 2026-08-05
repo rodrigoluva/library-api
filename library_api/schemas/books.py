@@ -21,10 +21,10 @@ class BookSchema(BaseModel):
 
 
 class BookUpdateSchema(BaseModel):
-    title: Optional[str]
-    isbn: Optional[str]
-    published_date: Optional[date]
-    author_id: Optional[int]
+    title: Optional[str] = None
+    isbn: Optional[str] = None
+    published_date: Optional[date] = None
+    author_id: Optional[int] = None
 
     @field_validator('title')
     @classmethod
