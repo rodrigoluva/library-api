@@ -35,6 +35,7 @@ nav:
   - API Endpoints: api-endpoints.md
   - Data Models: data-models-erd.md
   - System Architecture: system-architecture.md
+  - Tests: tests.md
   - Deployment: deployment.md
 
 plugins:

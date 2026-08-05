@@ -53,20 +53,17 @@ Para começar a usar esta API, siga as etapas descritas na seção [Instalação
 - [Endpoints da API](api-endpoints.md)
 - [Modelos de Dados (ERD)](data-models-erd.md)
 - [Arquitetura do Sistema](system-architecture.md)
+- [Testes](tests.md)
 - [Deploy](deployment.md)
 
 ---
 
 ## Licença
 
-Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](../LICENSE) para detalhes.
+Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](../../LICENSE) para detalhes.
 
 ---
 
 ## Autor
 
 **Rodrigo Valladão** - [rodrigoluva@gmail.com](mailto:rodrigoluva@gmail.com)
-
----
-
-*Última atualização: Julho 2025*

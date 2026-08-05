@@ -55,6 +55,7 @@ Explore the sections below for detailed information on all aspects of the API:
 - [API Endpoints](api-endpoints.md)
 - [Data Models (ERD)](data-models-erd.md)
 - [System Architecture](system-architecture.md)
+- [Tests](tests.md)
 - [Deployment](deployment.md)
 
 
@@ -62,14 +63,10 @@ Explore the sections below for detailed information on all aspects of the API:
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](../../LICENSE) file for details.
 
 ---
 
 ## Author
 
 **Rodrigo Valladão** - [rodrigoluva@gmail.com](mailto:rodrigoluva@gmail.com)
-
----
-
-*Last updated: July 2026*
