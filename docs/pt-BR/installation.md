@@ -163,6 +163,24 @@ INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 ```
 
+## Docker Compose
+
+Se você tiver o **Docker** instalado, começar é muito mais simples. Após clonar o repositório, execute o comando abaixo para iniciar a aplicação **Library API** e o banco de dados **PostgreSQL**, aplicar as migrações do banco de dados e disponibilizar a documentação da API.
+
+```sh
+docker compose up
+```
+
+Agora, entre no container utilizando:
+
+```sh
+docker exec -it libraryapi-app-1 sh
+```
+
+Em seguida, execute o comando descrito em [Criar Usuário Administrador Inicial](#criar-usuário-administrador-inicial) para criar a conta de administrador.
+
+Ao executar a aplicação com o Docker Compose, a documentação da API fica disponível na porta **80**. Abra o seu navegador e acesse `http://localhost` ou `http://127.0.0.1` para visualizá-la.
+
 ## Verificar a Instalação
 
 ### Documentação da API
