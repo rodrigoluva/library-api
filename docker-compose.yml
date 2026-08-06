@@ -1,0 +1,42 @@
+name: libraryapi
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      migrations:
+        condition: service_completed_successfully
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+
+  migrations:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    command: poetry run alembic upgrade head
+    depends_on:
+      - db
+
+  db:
+    image: postgres:18.4-trixie
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - data:/var/lib/postgresql
+
+  docs:
+    build:
+      context: .
+      dockerfile: Dockerfile.mkdocs
+    ports:
+      - "80:80"
+
+volumes:
+  data:

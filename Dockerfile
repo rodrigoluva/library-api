@@ -25,4 +25,4 @@ RUN poetry install \
 
 COPY --chown=${USERNAME}:${USERNAME} . .
 
-CMD ["poetry", "run", "fastapi", "dev", "library_api/app.py", "-host", "0.0.0.0"]
+CMD ["poetry", "run", "fastapi", "dev", "library_api/app.py", "--host", "0.0.0.0"]
