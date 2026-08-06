@@ -58,7 +58,10 @@ Acesse `http://localhost:8000/docs` para ver a documentação interativa da API 
 
 ## Docker Compose
 
-Se você tiver o **Docker** instalado, começar é muito mais simples. Após clonar o repositório, execute o comando abaixo para iniciar a aplicação **Library API** e o banco de dados **PostgreSQL**, aplicar as migrações do banco de dados e disponibilizar a documentação da API.
+Se você tiver o **Docker** instalado, começar é muito mais simples. Após clonar o repositório e criar o arquivo `.env`, execute o comando abaixo para iniciar a aplicação **Library API** e o banco de dados **PostgreSQL**, aplicar as migrações do banco de dados e disponibilizar a documentação da API.
+
+> [!warning]
+> Ao usar o **Docker**, não coloque os valores do arquivo `.env` entre aspas. O Docker lê variáveis ​​de ambiente como strings simples, e a inclusão de aspas pode causar comportamentos inesperados.
 
 ```sh
 docker compose up
