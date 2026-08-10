@@ -56,6 +56,27 @@ poetry run task run
 
 Acesse `http://localhost:8000/docs` para ver a documentação interativa da API (Swagger UI). Caso tenha dúvidas, consulte a documentação na pasta `docs/`.
 
+## Docker Compose
+
+Se você tiver o **Docker** instalado, começar é muito mais simples. Após clonar o repositório e criar o arquivo `.env`, execute o comando abaixo para iniciar a aplicação **Library API** e o banco de dados **PostgreSQL**, aplicar as migrações do banco de dados e disponibilizar a documentação da API.
+
+> [!warning]
+> Ao usar o **Docker**, não coloque os valores do arquivo `.env` entre aspas. O Docker lê variáveis ​​de ambiente como strings simples, e a inclusão de aspas pode causar comportamentos inesperados.
+
+```sh
+docker compose up
+```
+
+Agora, entre no container utilizando:
+
+```sh
+docker exec -it libraryapi-app-1 sh
+```
+
+Em seguida, execute o comando descrito em [Criar Usuário Administrador Inicial](docs/pt-BR/installation.md#criar-usuário-administrador-inicial) para criar a conta de administrador.
+
+Ao executar a aplicação com o Docker Compose, a documentação da API fica disponível na porta **80**. Abra o seu navegador e acesse `http://localhost` ou `http://127.0.0.1` para visualizá-la.
+
 ---
 
 ## Links Rápidos

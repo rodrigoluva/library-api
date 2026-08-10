@@ -163,6 +163,27 @@ INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 ```
 
+## Docker compose
+
+If you have **Docker** installed, getting started is much simpler. After cloning the repository and creating the `.env` file, run the following command to start the **Library API** application, the **PostgreSQL** database, apply the database migrations, and launch the API documentation.
+
+> [!warning]
+> When using **Docker**, do not wrap values in the `.env` file with quotes. Docker reads environment variables as plain strings, and including quotes may lead to unexpected behavior.
+
+```sh
+docker compose up
+```
+
+Now you enter inside the container using:
+
+```sh
+docker exec -it libraryapi-app-1 sh
+```
+
+Then, run the command described in [Create Initial User Admin](#create-initial-admin-user) to create the administrator account.
+
+When running the application with Docker Compose, the API documentation is exposed on port **80**. Open your browser and navigate to `http://localhost` or `http://127.0.0.1` to access it.
+
 ## Verify Installation
 
 ### API Documentation
