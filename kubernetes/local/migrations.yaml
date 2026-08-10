@@ -1,0 +1,21 @@
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: alembic-migrations
+  namespace: library-api
+spec:
+  template:
+    spec:
+      containers:
+      - name: alembic-migrations
+        image: libraryapi-app:1.0.0
+        command:
+        - /bin/sh
+        - -c
+        - |
+          poetry run alembic upgrade head
+        envFrom:
+        - secretRef:
+            name: library-api-secret
+      restartPolicy: Never
