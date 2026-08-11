@@ -36,3 +36,5 @@ cover/
 
 # Vscode files
 .vscode
+
+**/*.tgz
