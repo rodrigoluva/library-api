@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "library-api.fullname" . }}-mkdocs
+  labels:
+    {{- include "library-api.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "library-api-mkdocs.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "library-api-mkdocs.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: library-api-mkdocs
+        image: "libraryapi-docs:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80
