@@ -47,9 +47,22 @@ plugins:
           default: true
           name: English
           build: true
+
         - locale: pt-BR
           name: Português (Brasil)
           build: true
+          nav_translations:
+            Overview: Visão Geral
+            Prerequisites: Pré-requisitos
+            Installation: Instalação
+            Configuration: Configuração
+            Guidelines & Standards: Diretrizes e Padrões
+            Project Structure: Estrutura do Projeto
+            API Endpoints: Endpoints da API
+            Data Models: Modelos de Dados
+            System Architecture: Arquitetura do Sistema
+            Tests: Testes
+            Deployment: Implantação
 
 markdown_extensions:
   - pymdownx.superfences:
