@@ -77,6 +77,9 @@ Then, run the command described in [Create Initial User Admin](docs/en/installat
 
 When running the application with Docker Compose, the API documentation is exposed on port **80**. Open your browser and navigate to `http://localhost` or `http://127.0.0.1` to access it.
 
+## Kubernetes
+
+Para informações sobre a implantação local usando **Kubernetes**, consulte [Implantação](docs/en/deployment.md#deployment).
 
 ---
 

@@ -4,333 +4,144 @@ Production deployment guide for the Library API project.
 
 ---
 
-## 🚀 Deployment Options
+## Deployment Options
 
 ### Option 1: Docker Compose (Recommended for Small/Medium)
 
-```yaml
-# deployment/docker-compose.yml
-version: '3.8'
+If you have **Docker** installed, getting started is much simpler. After cloning the repository and creating the `.env` file, run the following command to start the **Library API** application, the **PostgreSQL** database, apply the database migrations, and launch the API documentation.
 
-services:
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=postgresql+asyncpg://library_user:${POSTGRES_PASSWORD}@postgres:5432/library_api
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - JWT_ALGORITHM=HS256
-      - JWT_EXPIRATION_MINUTES=15
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: unless-stopped
-    deploy:
-      resources:
-        limits:
-          memory: 512M
-          cpu: "1.0"
+> [!warning]
+> When using **Docker**, do not wrap values in the `.env` file with quotes. Docker reads environment variables as plain strings, and including quotes may lead to unexpected behavior.
 
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      - POSTGRES_DB=library_api
-      - POSTGRES_USER=library_user
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U library_user -d library_api"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  nginx:
-    image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./ssl:/etc/nginx/ssl:ro
-    depends_on:
-      - api
-    restart: unless-stopped
-
-volumes:
-  postgres_data:
+```sh
+docker compose up
 ```
+
+Now you enter inside the container using:
+
+```sh
+docker exec -it libraryapi-app-1 sh
+```
+
+Then, run the command described in [Create Initial User Admin](docs/en/installation.md#create-initial-admin-user) to create the administrator account.
+
+When running the application with Docker Compose, the API documentation is exposed on port **80**. Open your browser and navigate to `http://localhost` or `http://127.0.0.1` to access it.
+
+---
 
 ### Option 2: Kubernetes (Recommended for Scale)
 
-```yaml
-# deployment/k8s/deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: library-api
-  namespace: production
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: library-api
-  template:
-    metadata:
-      labels:
-        app: library-api
-    spec:
-      containers:
-      - name: api
-        image: your-registry/library-api:1.0.0
-        ports:
-        - containerPort: 8000
-        envFrom:
-        - secretRef:
-            name: library-api-secrets
-        resources:
-          requests:
-            memory: "256Mi"
-            cpu: "250m"
-          limits:
-            memory: "512Mi"
-            cpu: "500m"
-        livenessProbe:
-          httpGet:
-            path: /health_check
-            port: 8000
-          initialDelaySeconds: 10
-          periodSeconds: 30
-        readinessProbe:
-          httpGet:
-            path: /health_check
-            port: 8000
-          initialDelaySeconds: 5
-          periodSeconds: 10
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: library-api
-  namespace: production
-spec:
-  selector:
-    app: library-api
-  ports:
-  - port: 80
-    targetPort: 8000
-  type: LoadBalancer
+If you want to run the application with **Kubernetes**, you will need to install [kind](https://kind.sigs.k8s.io/), [kubectl](https://kubernetes.io/docs/tasks/tools/) and [Helm](https://helm.sh/) beforehand.
+
+#### Creating cluster
+
+To create a cluster using kind go to where the kind file is with:
+
+```sh
+cd kubernetes/kind
 ```
 
-### Option 3: Platform as a Service (Simplest)
+> [!info]
+> If **KinD** is on **Windows**, you can go for the WSL files using:
+> `cd \\wsl.localhost\Ubuntu\home\<username>\<path>`.
 
-| Platform | Command | Notes |
-|----------|---------|-------|
-| **Render** | Git push triggers deploy | Free tier, Postgres included |
-| **Railway** | Git push or CLI | Free tier available |
-| **Fly.io** | `fly deploy` | Edge deployment |
-| **Heroku** | Git push | Hobby tier available |
-| **Vercel** | Git push | Serverless, free tier |
-| **DigitalOcean App** | Git push or CLI | Simple PaaS |
+Create the cluster with:
 
----
-
-## 🐳 Docker Setup
-
-### Dockerfile
-
-```dockerfile
-# Dockerfile
-FROM python:3.13-slim
-
-WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y gcc > /dev/null 2>&1 && rm -rf /var/lib/apt/lists/*
-
-# Install Poetry
-RUN curl -sSL https://install.python-poetry.org | python3 -
-ENV PATH="/root/.local/bin:$PATH"
-
-# Copy project files
-COPY pyproject.toml poetry.lock ./
-RUN poetry config virtualenvs.create false && poetry install --no-dev
-
-# Copy application code
-COPY library_api/ ./library_api/
-COPY migrations/ ./migrations/
-COPY alembic.ini ./
-COPY .env.example ./.env
-
-# Run migrations
-RUN poetry run alembic upgrade head
-
-EXPOSE 8000
-
-HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
-  CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health_check')" || exit 1
-
-CMD ["poetry", "run", "uvicorn", "library_api.app:app", "--host", "0.0.0.0", "--port", "8000"]
+```sh
+kind create cluster --config config.yaml
 ```
 
-### Build and Run
-
-```bash
-# Build the image
-docker build -t library-api:latest .
-
-# Run the container
-docker run -d \
-  --name library-api \
-  -p 8000:8000 \
-  -e DATABASE_URL=postgresql+asyncpg://user:pass@host:5432/library_api \
-  -e JWT_SECRET_KEY=your-secret-key \
-  library-api:latest
-
-# Check logs
-docker logs -f library-api
-
-# Stop
-docker stop library-api
+You can delete the cluster with:
+```sh
+kind delete cluster
 ```
 
----
+#### Adding Docker Images to Cluster Nodes
 
-## ⚙️ Production Environment Configuration
+You can use the same images from **Docker Compose**, but you will need to change the tag to semantic versioning tags. You can also build app images with:
 
-### `.env` (Production)
-
-```env
-# Secure PostgreSQL connection (SSL required)
-DATABASE_URL=postgresql+asyncpg://library_user:SECURE_PASSWORD@db-host:5432/library_api
-
-# Strong JWT secret (≥32 chars, from secrets manager)
-JWT_SECRET_KEY=production-secret-from-vault-or-secrets-manager
-JWT_ALGORITHM=HS256
-JWT_EXPIRATION_MINUTES=15
+```sh
+docker build -t libraryapi-app:1.0.0 .
 ```
 
-### Environment-Specific Config
+And the MkDocs image with:
 
-| Variable | Development | Staging | Production |
-|----------|------------|---------|------------|
-| `DATABASE_URL` | SQLite | PostgreSQL | PostgreSQL + SSL |
-| `JWT_EXPIRATION_MINUTES` | 30 | 10 | 5-15 |
-| Log Level | DEBUG | INFO | WARNING |
-| CORS Origins | `*` | App domain | App domain |
-| Rate Limit | Disabled | 100/min | 100/min |
-
----
-
-## 🗄️ Database Migration in Production
-
-### Step-by-Step Process
-
-```bash
-# 1. Create migration
-poetry run alembic revision --autogenerate -m "description"
-
-# 2. Review generated migration
-cat migrations/versions/<revision>_description.py
-
-# 3. Test migration on staging
-poetry run alembic upgrade head
-
-# 4. Deploy application
-# 5. Run migrations on production
-poetry run alembic upgrade head
-
-# Rollback if needed
-# poetry run alembic downgrade -1
+```sh
+docker build -t libraryapi-docs:1.0.0 -f Dockerfile.mkdocs .
 ```
 
-### Backup Strategy
+Load these images into the cluster nodes with:
 
-```bash
-# PostgreSQL backup (daily)
-pg_dump -h db-host -U library_user library_api > backup_$(date +%Y%m%d).sql
-
-# Restore from backup
-psql -h db-host -U library_user library_api < backup_20260727.sql
+```sh
+kind load docker-image libraryapi-app:1.0.0
 ```
 
----
-
-## 📊 Monitoring & Observability
-
-### Health Check Endpoint
-
-```bash
-curl http://<host>:8000/health_check
-# Returns: {"status": "200 OK"}
+```sh
+kind load docker-image libraryapi-docs:1.0.0
 ```
 
-### Metrics to Monitor
+#### Adding Ingress
 
-| Metric | Tool | Alert Threshold |
-|--------|------|-----------------|
-| Response time | Prometheus | >500ms (p99) |
-| Error rate | Grafana | >1% of requests |
-| CPU usage | Kubernetes | >80% |
-| Memory usage | Kubernetes | >85% |
-| DB connections | PostgreSQL metrics | >80% of max_connections |
-| Active borrow records | Custom | >90% of total copies |
+We will use the **Kong Ingress Controller**, so we need to install the Gateway API CRDs and the **Kong Ingress Controller** with **Helm**.
 
-### Logging Strategy
+Install the CRDs first with:
 
-```python
-# library_api/app.py (logging configuration)
-import logging
-
-logging.basicConfig(
-    level=logging.WARNING,  # Production: WARNING or ERROR
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
+```sh
+kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.0.0/standard-install.yaml
 ```
 
----
+Add the **Kong** repository to our **Helm** with:
 
-## 🔒 Production Security Checklist
-
-- [ ] `JWT_SECRET_KEY` stored in secrets manager (not `.env`)
-- [ ] `DATABASE_URL` uses SSL/TLS for PostgreSQL (`sslmode=require`)
-- [ ] HTTPS enforced (nginx/ALB terminates TLS)
-- [ ] `JWT_EXPIRATION_MINUTES ≤ 15 minutes`
-- [ ] `DEBUG` logging disabled in production
-- [ ] Rate limiting enabled
-- [ ] CORS restricted to known origins
-- [ ] Database user has minimal required permissions
-- [ ] Automated backups configured
-- [ ] Docker image uses non-root user
-- [ ] Secrets not in version control
-- [ ] Dependencies scanned for vulnerabilities (`poetry audit`)
-
----
-
-## 🔄 CI/CD Pipeline Steps
-
-```mermaid
-graph LR
-    A[Git Push] --> B[CI Pipeline]
-    B --> C[Lint & Format Check]
-    C --> D[Run Tests]
-    D --> E[Build Docker Image]
-    E --> F[Push to Registry]
-    F --> G[Deploy to Staging]
-    G --> H[Run Migration]
-    H --> I[Run Smoke Tests]
-    I --> J[Deploy to Production]
-    J --> K[Run Migration]
-    K --> L[Health Check]
+```sh
+helm repo add kong https://charts.konghq.com
 ```
 
----
+```sh
+helm repo update
+```
 
-## 🔗 Next Steps
+And install the Kong Ingress Controller with:
 
+```sh
+helm upgrade --install --namespace kong --create-namespace kong kong/ingress --version 0.24.0 -f kubernetes/local/kong/values.yaml
+```
+
+> [!warning]
+> Check the version of your **kong/ingress** before installing on **Helm**, since it can change with time.
+
+#### Installing application
+
+Now to install our application go to the charts folder with:
+
+```sh
+cd kubernetes/charts/library-api
+```
+
+and run:
+
+```sh
+helm upgrade --install --namespace library-api --create-namespace library-api . -f values-local.yaml
+```
+> [!note]
+> On the first run, **Helm** will prompt you to build the chart's dependency, which is the **PostgreSQL** database. Run it with:
+`helm dependency build`.
+
+#### Modify hosts file
+
+When using the Ingress we need to add our test hosts on our system hosts file.
+- **Windows:** `C:\Windows\System32\drivers\etc\hosts`
+- **Linux:** `/etc/hosts`
+
+Add the following entry to your system's `hosts` file:
+
+```text
+127.0.0.1 library-api.localhost.com library-api-mkdocs.localhost.com
+```
+
+This maps both hostnames to `127.0.0.1`, allowing them to resolve to your local machine.
+
+#### Verifying
+
+We can check if everything is working going to the URLs:
+- Application: `library-api.localhost.com/docs`
+- Documentation: `library-api-mkdocs.localhost.com`

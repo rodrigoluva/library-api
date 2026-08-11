@@ -1,0 +1,59 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: library-api
+  namespace: library-api
+  labels:
+    app: library-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: library-api
+  template:
+    metadata:
+      labels:
+        app: library-api
+    spec:
+      containers:
+      - name: library-api
+        image: libraryapi-app:1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - secretRef:
+            name: library-api-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: library-api
+  namespace: library-api
+spec:
+  selector:
+    app: library-api
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: library-api-ingress
+  namespace: library-api
+spec:
+  ingressClassName: kong
+  rules:
+  - host: library-api.localhost.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: library-api
+            port:
+              number: 8000
