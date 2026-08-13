@@ -79,7 +79,7 @@ When running the application with Docker Compose, the API documentation is expos
 
 ## Kubernetes
 
-Para informações sobre a implantação local usando **Kubernetes**, consulte [Implantação](docs/en/deployment.md#deployment).
+For informations about local deploy using **Kubernetes** go to [Deployment](docs/en/deployment.md#deployment).
 
 ---
 
