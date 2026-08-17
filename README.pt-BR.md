@@ -1,5 +1,7 @@
 # Library API
 
+Português | [English](README.md#library-api)
+
 ## Visão Geral
 
 A Library API é uma API RESTful para o gerenciamento de um sistema de biblioteca. Ela disponibiliza endpoints para gerenciar usuários, autores, livros, exemplares e registros de empréstimo, possibilitando uma gestão eficiente do catálogo e fluxos de trabalho de empréstimo de livros.
