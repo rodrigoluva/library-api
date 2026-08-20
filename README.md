@@ -63,7 +63,7 @@ Access `http://localhost:8000/docs` for the interactive API documentation (Swagg
 If you have **Docker** installed, getting started is much simpler. After cloning the repository and creating the `.env` file, run the following command to start the **Library API** application, the **PostgreSQL** database, apply the database migrations, and launch the API documentation.
 
 > [!warning]
-> When using **Docker**, do not wrap values in the `.env` file with quotes. Docker reads environment variables as plain strings, and including quotes may lead to unexpected behavior.
+> When using **Docker**, do not wrap values in the `.env` file with quotes. Docker reads environment variables as plain strings, and including quotes may lead to unexpected behavior. Also, remember to change the `DATABASE_URL` on `.env` to use PostgreSQL.
 
 ```sh
 docker compose up
